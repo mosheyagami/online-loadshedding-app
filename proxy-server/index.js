@@ -11,16 +11,21 @@ const API_BASE = 'https://developer.sepush.co.za/business/2.0';
 const API_TOKEN = process.env.ESP_TOKEN;
 
 app.get('/api/search', async (req, res) => {
+  const search = req.query.search;
+
   try {
-    const { text } = req.query;
-    const response = await axios.get(`${API_BASE}/areas_search?text=${text}`, {
-      headers: { token: API_TOKEN },
+    const response = await axios.get(`https://developer.sepush.co.za/business/2.0/areas_search`, {
+      params: { text: search },
+      headers: { 'Token': process.env.ESP_API_KEY }
     });
+
     res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error('Search API failed:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Internal server error from proxy' });
   }
 });
+
 
 app.get('/api/area', async (req, res) => {
   try {

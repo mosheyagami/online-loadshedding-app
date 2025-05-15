@@ -1,4 +1,4 @@
-// src/App.js
+
 import React, { useState } from 'react';
 import { searchArea, getAreaInfo } from './api';
 import './App.css';
@@ -7,12 +7,31 @@ function App() {
   const [searchText, setSearchText] = useState('');
   const [areas, setAreas] = useState([]);
   const [areaInfo, setAreaInfo] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+
+
+const handleSearch = async () => {
+  if (!searchText.trim()) return;
+
+  setError(null);
+  setLoading(true);
+
+  try {
     const result = await searchArea(searchText);
     setAreas(result.areas || []);
     setAreaInfo(null);
-  };
+  } catch (err) {
+    console.error('Search failed:', err);
+    setError('Failed to fetch areas. Please try again later.');
+  } finally {
+    setLoading(false); // stop loading
+  }
+};
+
+
+
 
   const handleSelectArea = async (id) => {
     const info = await getAreaInfo(id);
@@ -23,25 +42,39 @@ function App() {
     <div className="container">
       <h1>Loadshedding Tracker</h1>
 
-      <div className="input-group">
-        <input
-          type="text"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Enter area name (e.g., Cape Town)"
-        />
-        <button onClick={handleSearch}>Search</button>
-      </div>
+<div className="input-group">
+  <input
+    type="text"
+    value={searchText}
+    onChange={(e) => setSearchText(e.target.value)}
+    placeholder="Enter area name (e.g., Cape Town)"
+  />
+  <button onClick={handleSearch}>Search</button>
+  {loading && <div className="spinner"></div>}
+</div>
 
-      {areas.length > 0 && (
-        <ul className="area-list">
-          {areas.map((area) => (
-            <li key={area.id} className="area-item">
-              <span>{area.name}</span>
-              <button onClick={() => handleSelectArea(area.id)}>Select</button>
-            </li>
-          ))}
-        </ul>
+  {error && <div className="error-message">{error}</div>}
+
+
+{areas.length > 0 && (
+  <ul className="area-list">
+    {areas.map((area) => {
+      const isMeaningfulMunicipality = area.municipality &&
+        !area.municipality.toLowerCase().includes('eskom');
+
+      const displayParts = [
+        isMeaningfulMunicipality ? area.municipality : null,
+        area.region
+      ].filter(Boolean);
+
+      return (
+        <li key={area.id} className="area-item">
+          <span>{area.name}{displayParts.length ? ` - ${displayParts.join(', ')}` : ''}</span>
+          <button onClick={() => handleSelectArea(area.id)}>Select</button>
+        </li>
+      );
+    })}
+  </ul>
       )}
 
       {areaInfo && (
