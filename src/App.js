@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState } from 'react';
 import { searchArea, getAreaInfo } from './api';
 import './App.css';
@@ -8,29 +9,19 @@ function App() {
   const [areaInfo, setAreaInfo] = useState(null);
 
   const handleSearch = async () => {
-    try {
-      const result = await searchArea(searchText);
-      setAreas(result.areas || []);
-      setAreaInfo(null);
-    } catch (error) {
-      console.error('Search error:', error);
-      alert('Failed to search areas. Please try again.');
-    }
+    const result = await searchArea(searchText);
+    setAreas(result.areas || []);
+    setAreaInfo(null);
   };
 
   const handleSelectArea = async (id) => {
-    try {
-      const info = await getAreaInfo(id);
-      setAreaInfo(info);
-    } catch (error) {
-      console.error('Area info fetch error:', error);
-      alert('Failed to fetch area info. Please try again.');
-    }
+    const info = await getAreaInfo(id);
+    setAreaInfo(info);
   };
 
   return (
     <div className="container">
-      <h1>React Loadshedding Tracker</h1>
+      <h1>Loadshedding Tracker</h1>
 
       <div className="input-group">
         <input
@@ -61,36 +52,50 @@ function App() {
           <p><strong>Stage:</strong> {areaInfo.events?.[0]?.note || 'No current events'}</p>
 
           <div className="event-list">
-            <h3>Upcoming Events:</h3>
+            <h3>Upcoming Loadshedding:</h3>
             <ul>
               {areaInfo.events?.length ? areaInfo.events.map((event, index) => {
-                const start = new Date(event.start);
-                const end = new Date(event.end);
+  const start = new Date(event.start);
+  const end = new Date(event.end);
 
-                const datePart = start.toLocaleDateString('en-ZA', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                });
+  const datePart = start.toLocaleDateString('en-ZA', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
-                const startTime = start.toLocaleTimeString('en-ZA', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
+  const startTime24 = start.toLocaleTimeString('en-ZA', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 
-                const endTime = end.toLocaleTimeString('en-ZA', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
+  const endTime24 = end.toLocaleTimeString('en-ZA', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 
-                return (
-                  <li key={index}>
-                    {datePart}, {startTime} → {endTime} ({event.note})
-                  </li>
-                );
-              }) : (
-                <li>No upcoming events</li>
-              )}
+  const to12HourFormat = (time24) => {
+    const [hour, minute] = time24.split(':');
+    const h = parseInt(hour, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${minute} ${ampm}`;
+  };
+
+  const sentence = `On ${datePart}, Loadshedding will start from ${to12HourFormat(startTime24)} to ${to12HourFormat(endTime24)} (${event.note})`;
+
+  return (
+    <li key={index}>
+      {datePart}, {startTime24} → {endTime24} ({event.note})<br />
+      <em>{sentence}</em>
+    </li>
+  );
+}) : <li>No upcoming events</li>}
+
+
+
             </ul>
           </div>
         </div>
