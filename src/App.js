@@ -23,7 +23,7 @@ function App() {
       console.error("Search failed:", err);
       setError("Failed to fetch areas. Please try again later.");
     } finally {
-      setLoading(false); // stop loading
+      setLoading(false);
     }
   };
 
